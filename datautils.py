@@ -29,7 +29,7 @@ def get_wikitext2(nsamples, seed, seqlen, model):
         trainloader.append((inp, tar))
     return trainloader, testenc
     
-def _generate_prompt(self, convo: list, eos_token: str) -> str:
+def generate_prompt(self, convo: list, eos_token: str) -> str:
     convo_text = ""
     for turn in convo:
         entity = turn["from"]
@@ -58,7 +58,7 @@ def get_unfiltered(nsamples, seed, seqlen, model):
     model_dataset = "ehartford/wizard_vicuna_70k_unfiltered"
     
     data = load_dataset(model_dataset) 
-    data = data.map(lambda data_point: self.tokenizer(self._generate_prompt(data_point["conversations"], tokenizer.eos_token), max_length=tokenizer.model_max_length,truncation=True,))
+    data = data.map(lambda data_point: tokenizer(self.generate_prompt(data_point["conversations"], tokenizer.eos_token), max_length=tokenizer.model_max_length,truncation=True,))
 
     trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt')
     testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt')
