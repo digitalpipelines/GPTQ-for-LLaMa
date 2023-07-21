@@ -28,6 +28,60 @@ def get_wikitext2(nsamples, seed, seqlen, model):
         tar[:, :-1] = -100
         trainloader.append((inp, tar))
     return trainloader, testenc
+    
+def _generate_prompt(self, convo: list, eos_token: str) -> str:
+    convo_text = ""
+    for turn in convo:
+        entity = turn["from"]
+        value = turn["value"]
+
+        if entity == "human":
+            convo_text += "### HUMAN:\n"
+            end_token = ""
+        elif entity == "gpt":
+            convo_text += "### RESPONSE:\n"
+            end_token = eos_token  # LLM should stop its output after the response
+        else:
+            print(f"WARNING: uknown entity {entity}")
+            convo_text += f"### {entity.upper()}:\n"
+            end_token = ""
+
+        convo_text += value + end_token + "\n\n"
+    return convo_text
+    
+def get_unfiltered(nsamples, seed, seqlen, model):
+    from datasets import load_dataset
+
+    from transformers import AutoTokenizer 
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+
+    model_dataset = "ehartford/wizard_vicuna_70k_unfiltered"
+    data = load_dataset(model_dataset)
+     
+     data = data.map(lambda data_point: self.tokenizer(
+         self._generate_prompt(
+             data_point["conversations"],
+             self.tokenizer.eos_token),
+         max_length=context_window,
+         truncation=True,
+     ))
+
+    trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt')
+    testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt')
+
+    traindata = load_dataset(data)
+
+    import random
+    random.seed(seed)
+    trainloader = []
+    for _ in range(nsamples):
+        i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
+        j = i + seqlen
+        inp = trainenc.input_ids[:, i:j]
+        tar = inp.clone()
+        tar[:, :-1] = -100
+        trainloader.append((inp, tar))
+    return trainloader, testenc
 
 def get_ptb(nsamples, seed, seqlen, model):
     from datasets import load_dataset
@@ -165,6 +219,8 @@ def get_loaders(
 ):
     if 'wikitext2' in name:
         return get_wikitext2(nsamples, seed, seqlen, model)
+    if 'unfiltered' in name:
+        return get_unfiltered(nsamples, seed, seqlen, model)
     if 'ptb' in name:
         if 'new' in name:
             return get_ptb_new(nsamples, seed, seqlen, model)

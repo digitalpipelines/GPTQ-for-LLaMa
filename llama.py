@@ -361,7 +361,7 @@ if __name__ == '__main__':
         help='llama model to load'
     )
     parser.add_argument(
-        'dataset', type=str, choices=['wikitext2', 'ptb', 'c4'],
+        'dataset', type=str, choices=['wikitext2', 'ptb', 'c4', 'unfiltered'],
         help='Where to extract calibration data from.'
     )
     parser.add_argument(
@@ -467,9 +467,9 @@ if __name__ == '__main__':
         exit()
         
     if args.eval:
-        datasets = ['wikitext2', 'ptb', 'c4'] 
+        datasets = ['wikitext2', 'ptb', 'c4', 'unfiltered'] 
         if args.new_eval:
-          datasets = ['wikitext2', 'ptb-new', 'c4-new']
+          datasets = ['wikitext2', 'ptb-new', 'c4-new', 'unfiltered']
         for dataset in datasets: 
             dataloader, testloader = get_loaders(
                 dataset, seed=args.seed, model=args.model, seqlen=model.seqlen
