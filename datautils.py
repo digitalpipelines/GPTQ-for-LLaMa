@@ -56,15 +56,9 @@ def get_unfiltered(nsamples, seed, seqlen, model):
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
 
     model_dataset = "ehartford/wizard_vicuna_70k_unfiltered"
-    data = load_dataset(model_dataset)
-     
-     data = data.map(lambda data_point: self.tokenizer(
-         self._generate_prompt(
-             data_point["conversations"],
-             self.tokenizer.eos_token),
-         max_length=context_window,
-         truncation=True,
-     ))
+    
+    data = load_dataset(model_dataset) 
+    data = data.map(lambda data_point: self.tokenizer(self._generate_prompt(data_point["conversations"], tokenizer.eos_token), max_length=tokenizer.model_max_length,truncation=True,))
 
     trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt')
     testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt')
